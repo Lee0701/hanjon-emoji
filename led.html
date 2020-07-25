@@ -1,0 +1,68 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script>
+        const BLANK = '. '.split('')
+        const PIXEL = 'o.'.split('')
+        const draw = (ctx, data) => {
+            const width = ctx.canvas.width
+            const height = ctx.canvas.height
+            const w = width / data[0].length
+            const h = height / data.length
+            const size = w < h ? w : h
+            const margin = size / 50
+            
+            ctx.clearRect(0, 0, width, height)
+            data.forEach((line, j) => {
+                line.forEach((pixel, i) => {
+                    const y = j * h + h/2
+                    const x = i * w + w/2
+                    const s = size/2 - margin*2
+                    ctx.fillStyle = pixel ? 'red' : 'black'
+                    ctx.beginPath()
+                    ctx.arc(x, y, s, 0, Math.PI*2)
+                    ctx.fill()
+                })
+            })
+        }
+        window.addEventListener('load', () => {
+            const ctx = document.querySelector('#g').getContext('2d')
+            const t = document.querySelector('#t')
+            const drawText = () => {
+                const data = t.value.split('\n').filter(line => line.length > 0).map(line => line.split('').map(c => !BLANK.includes(c)))
+                draw(ctx, data)
+            }
+            document.querySelector('#b').addEventListener('click', () => drawText())
+            ctx.canvas.addEventListener('click', (e) => {
+                const data = t.value.split('\n').filter(line => line.length > 0).map(line => line.split(''))
+
+                const width = ctx.canvas.width
+                const height = ctx.canvas.height
+                const pw = width / data[0].length
+                const ph = height / data.length
+
+                const offset = e.target.getBoundingClientRect()
+                const x = e.pageX - offset.left
+                const y = e.clientY - offset.top
+                const px = Math.floor(x / pw)
+                const py = Math.floor(y / ph)
+
+                console.log(x, y, px, py)
+
+                data[py][px] = BLANK.includes(data[py][px]) ? PIXEL[0] : BLANK[0]
+                t.value = data.map(line => line.join('')).join('\n')
+
+                drawText()
+            })
+        })
+    </script>
+</head>
+<body>
+    <textarea id="t" rows="20" cols="20" style="font-family: 'Courier New', Courier, monospace; line-height: 75%;"></textarea>
+    <br>
+    <button id="b" type="button">Generate</button>
+    <br>
+    <canvas id="g" width="256" height="256"></canvas>
+</body>
+</html>
