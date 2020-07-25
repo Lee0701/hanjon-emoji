@@ -2,10 +2,27 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script src="Animated_GIF.min.js"></script>
     <script>
+        const ag = new Animated_GIF()
+
         const BLANK = '. '.split('')
         const PIXEL = 'o.'.split('')
-        const draw = (ctx, data) => {
+        const DELAY = 100
+
+        const getFrame = (text) => text.split('\n').filter(line => line.length > 0).map(line => line.split('').map(c => !BLANK.includes(c)))
+        const getFrames = (text) => text.split('~~~').map(frame => getFrame(frame))
+
+        const padEnd = (frame) => frame.map(line => [...line, false])
+        
+        const joinFrame = (a, c) => a.map((line, i) => [...line, ...c[i]])
+        const joinFrames = (frames) => frames.reduce(joinFrame)
+        const sliceFrame = (frame, begin, end) => frame.map(line => line.slice(begin, end))
+
+        const makeFrameText = (frame) => frame.map(line => line.map(b => b ? PIXEL[0] : BLANK[0]).join('')).join('\n')
+        const makeText = (frames) => frames.map(frame => makeFrameText(frame)).join('\n~~~\n')
+
+        const draw = (ctx, data, background='transparent') => {
             const width = ctx.canvas.width
             const height = ctx.canvas.height
             const w = width / data[0].length
@@ -13,7 +30,9 @@
             const size = w < h ? w : h
             const margin = size / 50
             
+            ctx.fillStyle = background
             ctx.clearRect(0, 0, width, height)
+            ctx.fillRect(0, 0, width, height)
             data.forEach((line, j) => {
                 line.forEach((pixel, i) => {
                     const y = j * h + h/2
@@ -26,16 +45,50 @@
                 })
             })
         }
+
         window.addEventListener('load', () => {
-            const ctx = document.querySelector('#g').getContext('2d')
             const t = document.querySelector('#t')
+            const ctx = document.querySelector('#g').getContext('2d')
+            const gif = document.querySelector('#gif')
+
             const drawText = () => {
-                const data = t.value.split('\n').filter(line => line.length > 0).map(line => line.split('').map(c => !BLANK.includes(c)))
+                const data = getFrames(t.value)[0]
                 draw(ctx, data)
             }
+            const drawGIF = () => {
+                const frames = getFrames(t.value)
+                const joined = joinFrames(frames.map(frame => padEnd(frame)))
+                const data = joinFrames([joined, joined])
+
+                const frameWidth = frames[0][0].length
+
+                const drawFrame = (i) => new Promise((res, rej) => {
+                    draw(ctx, sliceFrame(data, i, i + frameWidth), 'black')
+                    const image = new Image()
+                    image.src = ctx.canvas.toDataURL()
+                    image.onload = () => res(image)
+                })
+
+                Promise.all(joined[0].map((_c, i) => drawFrame(i))).then((images) => {
+                    ag.setSize(ctx.canvas.width, ctx.canvas.height)
+                    ag.setDelay(DELAY)
+                    images.forEach(image => ag.addFrame(image))
+                    const animatedImage = document.createElement('img')
+                    ag.getBase64GIF(image => {
+                        gif.innerHTML = ''
+                        animatedImage.src = image
+                        gif.appendChild(animatedImage)
+                    })
+                })
+
+            }
+
             document.querySelector('#b').addEventListener('click', () => drawText())
+            document.querySelector('#gb').addEventListener('click', () => drawGIF())
+
             ctx.canvas.addEventListener('click', (e) => {
-                const data = t.value.split('\n').filter(line => line.length > 0).map(line => line.split(''))
+                const frames = getFrames(t.value)
+                const data = frames[0]
 
                 const width = ctx.canvas.width
                 const height = ctx.canvas.height
@@ -48,10 +101,9 @@
                 const px = Math.floor(x / pw)
                 const py = Math.floor(y / ph)
 
-                console.log(x, y, px, py)
-
-                data[py][px] = BLANK.includes(data[py][px]) ? PIXEL[0] : BLANK[0]
-                t.value = data.map(line => line.join('')).join('\n')
+                data[py][px] = !data[py][px]
+                frames[0] = data
+                t.value = makeText(frames)
 
                 drawText()
             })
@@ -62,7 +114,10 @@
     <textarea id="t" rows="20" cols="20" style="font-family: 'Courier New', Courier, monospace; line-height: 75%;"></textarea>
     <br>
     <button id="b" type="button">Generate</button>
+    <button id="gb" type="button">GIF</button>
     <br>
     <canvas id="g" width="256" height="256"></canvas>
+    <br>
+    <div id="gif"></div>
 </body>
 </html>
