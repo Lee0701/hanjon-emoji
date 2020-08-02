@@ -52,10 +52,14 @@
             const gif = document.querySelector('#gif')
 
             const drawText = () => {
+                ctx.canvas.width = 256
+                ctx.canvas.height = 256
                 const data = getFrames(t.value)[0]
                 draw(ctx, data)
             }
             const drawGIF = () => {
+                ctx.canvas.width = 128
+                ctx.canvas.height = 128
                 const frames = getFrames(t.value)
                 const joined = joinFrames(frames.map(frame => padEnd(frame)))
                 const data = joinFrames([joined, joined])
@@ -116,7 +120,7 @@
     <button id="b" type="button">Generate</button>
     <button id="gb" type="button">GIF</button>
     <br>
-    <canvas id="g" width="256" height="256"></canvas>
+    <canvas id="g" width="128" height="128"></canvas>
     <span id="gif"></span>
 </body>
 </html>
