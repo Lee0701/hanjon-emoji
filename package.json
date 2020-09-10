@@ -1,0 +1,24 @@
+{
+  "name": "hanjon-emoji",
+  "version": "1.0.0",
+  "description": "",
+  "main": "Animated_GIF.min.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lee0701/hanjon-emoji.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Lee0701/hanjon-emoji/issues"
+  },
+  "homepage": "https://github.com/Lee0701/hanjon-emoji#readme",
+  "dependencies": {
+    "canvas": "^2.6.1",
+    "cjk-unihan": "0.0.3"
+  }
+}
